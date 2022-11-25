@@ -458,6 +458,7 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
     
     self.videoPlayerLayer.hidden = NO;
     self.videoCenteredPlayButton.hidden = NO;
+    self.videoToolbar.hidden = NO;
     self.videoToolbar.playButton.hidden = NO;
     self.videoToolbar.pauseButton.hidden = YES;
 
@@ -535,7 +536,7 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
             self.videoToolbar.sliderRightLabel.text = [self timeStringFromSeconds:duration];
             
             self.videoToolbar.slider.minimumValue = 0.0;
-            self.videoToolbar.slider.maximumValue = 60;
+            self.videoToolbar.slider.maximumValue = duration;
             self.videoToolbar.slider.value = 0;
             [self.videoToolbar.slider addTarget:self action:@selector(handleStartDragVideoSlider:) forControlEvents:UIControlEventTouchDown];
             [self.videoToolbar.slider addTarget:self action:@selector(handleDraggingVideoSlider:) forControlEvents:UIControlEventValueChanged];
@@ -787,12 +788,6 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
     CGPoint gesturePoint = [gestureRecognizer locationInView:gestureRecognizer.view];
     if ([self.delegate respondsToSelector:@selector(singleTouchInZoomingImageView:location:)]) {
         [self.delegate singleTouchInZoomingImageView:self location:gesturePoint];
-    }
-    if (self.videoPlayerItem) {
-        self.videoToolbar.hidden = !self.videoToolbar.hidden;
-        if ([self.delegate respondsToSelector:@selector(zoomImageView:didHideVideoToolbar:)]) {
-            [self.delegate zoomImageView:self didHideVideoToolbar:self.videoToolbar.hidden];
-        }
     }
 }
 
