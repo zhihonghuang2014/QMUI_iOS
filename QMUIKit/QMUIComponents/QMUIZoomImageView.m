@@ -405,6 +405,13 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
 
 #pragma mark - Video
 
+- (void)setupVideoPlayerItem:(AVPlayerItem *)playerItem viewSize:(CGSize)viewSize {
+    
+    self.videoSize = viewSize;
+    
+    self.videoPlayerItem = playerItem;
+}
+
 - (void)setVideoPlayerItem:(AVPlayerItem *)videoPlayerItem {
     _videoPlayerItem = videoPlayerItem;
     
@@ -424,14 +431,17 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
         return;
     }
     
-    // 获取视频尺寸
-    NSArray<AVAssetTrack *> *tracksArray = videoPlayerItem.asset.tracks;
-    self.videoSize = CGSizeZero;
-    for (AVAssetTrack *track in tracksArray) {
-        if ([track.mediaType isEqualToString:AVMediaTypeVideo]) {
-            CGSize size = CGSizeApplyAffineTransform(track.naturalSize, track.preferredTransform);
-            self.videoSize = CGSizeMake(fabs(size.width), fabs(size.height));
-            break;
+    // 视频尺寸
+    if (CGSizeIsEmpty(self.videoSize)) {
+        
+        NSArray<AVAssetTrack *> *tracksArray = videoPlayerItem.asset.tracks;
+        self.videoSize = CGSizeZero;
+        for (AVAssetTrack *track in tracksArray) {
+            if ([track.mediaType isEqualToString:AVMediaTypeVideo]) {
+                CGSize size = CGSizeApplyAffineTransform(track.naturalSize, track.preferredTransform);
+                self.videoSize = CGSizeMake(fabs(size.width), fabs(size.height));
+                break;
+            }
         }
     }
     
@@ -449,7 +459,8 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
     self.videoPlayerLayer.hidden = NO;
     self.videoCenteredPlayButton.hidden = NO;
     self.videoToolbar.playButton.hidden = NO;
-    
+    self.videoToolbar.pauseButton.hidden = YES;
+
     [self revertZooming];
 }
 
@@ -459,15 +470,11 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
     self.videoCenteredPlayButton.hidden = YES;
     self.videoToolbar.playButton.hidden = YES;
     self.videoToolbar.pauseButton.hidden = NO;
-    if (button.tag == kTagForCenteredPlayButton) {
-        self.videoToolbar.hidden = YES;
-        if ([self.delegate respondsToSelector:@selector(zoomImageView:didHideVideoToolbar:)]) {
-            [self.delegate zoomImageView:self didHideVideoToolbar:YES];
-        }
-    }
+ 
 }
 - (void)handlePauseButton {
     [self.videoPlayer pause];
+    self.videoCenteredPlayButton.hidden = NO;
     self.videoToolbar.playButton.hidden = NO;
     self.videoToolbar.pauseButton.hidden = YES;
 }
@@ -514,18 +521,31 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
 }
 
 - (void)configVideoProgressSlider {
-    self.videoToolbar.sliderLeftLabel.text = [self timeStringFromSeconds:0];
-    double duration = CMTimeGetSeconds(self.videoPlayerItem.asset.duration);
-    self.videoToolbar.sliderRightLabel.text = [self timeStringFromSeconds:duration];
+        
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
-    self.videoToolbar.slider.minimumValue = 0.0;
-    self.videoToolbar.slider.maximumValue = duration;
-    self.videoToolbar.slider.value = 0;
-    [self.videoToolbar.slider addTarget:self action:@selector(handleStartDragVideoSlider:) forControlEvents:UIControlEventTouchDown];
-    [self.videoToolbar.slider addTarget:self action:@selector(handleDraggingVideoSlider:) forControlEvents:UIControlEventValueChanged];
-    [self.videoToolbar.slider addTarget:self action:@selector(handleFinishDragVideoSlider:) forControlEvents:UIControlEventTouchUpInside];
-    
-    [self addPlayerTimeObserver];
+    dispatch_async(queue, ^{
+        
+        double duration = CMTimeGetSeconds(self.videoPlayerItem.asset.duration);
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            self.videoToolbar.sliderLeftLabel.text = [self timeStringFromSeconds:0];
+
+            self.videoToolbar.sliderRightLabel.text = [self timeStringFromSeconds:duration];
+            
+            self.videoToolbar.slider.minimumValue = 0.0;
+            self.videoToolbar.slider.maximumValue = 60;
+            self.videoToolbar.slider.value = 0;
+            [self.videoToolbar.slider addTarget:self action:@selector(handleStartDragVideoSlider:) forControlEvents:UIControlEventTouchDown];
+            [self.videoToolbar.slider addTarget:self action:@selector(handleDraggingVideoSlider:) forControlEvents:UIControlEventValueChanged];
+            [self.videoToolbar.slider addTarget:self action:@selector(handleFinishDragVideoSlider:) forControlEvents:UIControlEventTouchUpInside];
+            
+            [self addPlayerTimeObserver];
+            
+        });
+        
+    });
 }
 
 - (void)addPlayerTimeObserver {
@@ -574,7 +594,7 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
     [self.videoPlayer seekToTime:CMTimeMake(0, 1)];
     [self pauseVideo];
     [self syncVideoProgressSlider];
-    self.videoToolbar.hidden = YES;
+    self.videoToolbar.hidden = NO;
     self.videoCenteredPlayButton.hidden = NO;
     
 }

@@ -87,6 +87,8 @@
 /// 设置当前要显示的 video ，会把 image/livePhoto 相关内容清空，因此注意不要直接通过 videoPlayerLayer 来设置
 @property(nonatomic, weak) AVPlayerItem *videoPlayerItem;
 
+- (void)setupVideoPlayerItem:(AVPlayerItem *)playerItem viewSize:(CGSize)viewSize;
+
 /// 用于显示 video 的 layer
 @property(nonatomic, weak, readonly) AVPlayerLayer *videoPlayerLayer;
 
