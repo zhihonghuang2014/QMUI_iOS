@@ -582,6 +582,19 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
     return [NSString stringWithFormat:@"%02ld:%02ld", (long)min, (long)sec];
 }
 
+/// 播放
+- (void)playVideo {
+    
+    [self playVideoStartTime:0];
+}
+
+- (void)playVideoStartTime:(CMTime)startTime {
+    
+    [self.videoPlayer seekToTime:startTime];
+    
+    [self handlePlayButton:nil];
+}
+
 - (void)pauseVideo {
     if (!self.videoPlayer) {
         return;

@@ -115,6 +115,11 @@
 // 当前展示的资源的下载状态
 @property(nonatomic, assign) QMUIAssetDownloadStatus cloudDownloadStatus;
 
+/// 播放
+- (void)playVideo;
+
+- (void)playVideoStartTime:(CMTime)startTime;
+
 /// 暂停视频播放
 - (void)pauseVideo;
 /// 停止视频播放，将播放状态重置到初始状态
