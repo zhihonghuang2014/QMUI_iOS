@@ -335,14 +335,21 @@ NSString *const kShouldFixTitleViewBugKey = @"kShouldFixTitleViewBugKey";
             OverrideImplementation([UINavigationBar class], @selector(setStandardAppearance:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
                 return ^(UINavigationBar *selfObject, UINavigationBarAppearance * firstArgv) {
                     
-                    // call super
-                    void (*originSelectorIMP)(id, SEL, UINavigationBarAppearance *);
-                    originSelectorIMP = (void (*)(id, SEL, UINavigationBarAppearance *))originalIMPProvider();
-                    originSelectorIMP(selfObject, originCMD, firstArgv);
-                    
-                    // 这里只希望识别 UINavigationController 自带的 navigationBar，不希望处理业务自己 new 的 bar，所以用 superview 是否为 UILayoutContainerView 来作为判断条件。
-                    if ([NSStringFromClass(selfObject.superview.class) hasPrefix:@"UILayoutContainer"] && !selfObject.window) {
-                        QMUIAssert(NO, @"UINavigationBar (QMUI)", @"试图在 UINavigationBar 尚未添加到 window 上时就修改它的样式，可能导致 UINavigationBar 的样式无法与全局保持一致。");
+                    /// 过滤TZImagePickerController
+                    if (![NSStringFromClass([[selfObject.superview qmui_viewController] class]) isEqualToString:@"TZImagePickerController"]) {
+                        
+                        // call super
+                        void (*originSelectorIMP)(id, SEL, UINavigationBarAppearance *);
+                        originSelectorIMP = (void (*)(id, SEL, UINavigationBarAppearance *))originalIMPProvider();
+                        originSelectorIMP(selfObject, originCMD, firstArgv);
+                        
+                        // 这里只希望识别 UINavigationController 自带的 navigationBar，不希望处理业务自己 new 的 bar，所以用 superview 是否为 UILayoutContainerView 来作为判断条件。
+                        if ([NSStringFromClass(selfObject.superview.class) hasPrefix:@"UILayoutContainer"] && !selfObject.window) {
+                            
+                            QMUIAssert(NO, @"UINavigationBar (QMUI)", @"试图在 UINavigationBar 尚未添加到 window 上时就修改它的样式，可能导致 UINavigationBar 的样式无法与全局保持一致。");
+
+                            
+                        }
                     }
                 };
             });
