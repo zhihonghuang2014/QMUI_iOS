@@ -585,7 +585,7 @@ static NSUInteger const kTagForCenteredPlayButton = 1;
 /// 播放
 - (void)playVideo {
     
-    [self playVideoStartTime:0];
+    [self playVideoStartTime:kCMTimeZero];
 }
 
 - (void)playVideoStartTime:(CMTime)startTime {
